@@ -43,21 +43,21 @@ ax_loss = fig.add_subplot(grid[0:3, -7:-2])
 
 ax_a1 = fig.add_subplot(grid[0:3, 0])	# y_hat
 ax_a2 = fig.add_subplot(grid[1:2, 1])	# minus / dot
-ax_a3 = fig.add_subplot(grid[0:3, 2])	# e(y)
-ax_a4 = fig.add_subplot(grid[1:2, 3])	# =
-ax_a5 = fig.add_subplot(grid[0:3, 4])	# da
+ax_a3 = fig.add_subplot(grid[0:3, 2:5])	# e(y)
+ax_a4 = fig.add_subplot(grid[1:2, 5])	# =
+ax_a5 = fig.add_subplot(grid[0:3, 6])	# da
 
 ax_h5 = fig.add_subplot(grid[0:3, -1])		# dh
 ax_h4 = fig.add_subplot(grid[1:2, -2])		# =
 ax_h3 = fig.add_subplot(grid[0:3, -3])		# da
 ax_h2 = fig.add_subplot(grid[1:2, -4])		# multiply
-ax_h1 = fig.add_subplot(grid[0:3, 0:-5])	# dw
+ax_h1 = fig.add_subplot(grid[0:3, 0:-4])	# dw
 
 ax_w1 = fig.add_subplot(grid[0:3, 0])	# da
 ax_w2 = fig.add_subplot(grid[1:2, 1])	# multiply
-ax_w3 = fig.add_subplot(grid[1:2, 2:5])	# h
-ax_w4 = fig.add_subplot(grid[1:2, 5])	# =
-ax_w5 = fig.add_subplot(grid[0:3, 6:])	# dw
+ax_w3 = fig.add_subplot(grid[1:2, 2:6])	# h
+ax_w4 = fig.add_subplot(grid[1:2, 6])	# =
+ax_w5 = fig.add_subplot(grid[0:3, 7:])	# dw
 
 class MultiLayer_NeuralNet(active):
   
@@ -379,18 +379,21 @@ class MultiLayer_NeuralNet(active):
 			ax_loss.axis('on')
 
 		elif fun1 == 'a':
+			print("inside a")
 			ax_a1.axis('on')
 			ax_a2.axis('on')
 			ax_a3.axis('on')
 			ax_a4.axis('on')
 			ax_a5.axis('on')
 		elif fun1 == 'w':
+			print("inside w")
 			ax_w1.axis('on')
 			ax_w2.axis('on')
 			ax_w3.axis('on')
 			ax_w4.axis('on')
 			ax_w5.axis('on')
 		elif fun1 == 'h':
+			print("inside h")
 			ax_h5.axis('on')
 			ax_h4.axis('on')
 			ax_h3.axis('on')
@@ -400,7 +403,7 @@ class MultiLayer_NeuralNet(active):
 
 
 	def draw_nodes(self, ax, left, right, bottom, top, layer_sizes, preactivations, 
-					values, layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y=None):
+					values, layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y=None, fun1=None):
 	    # Nodes
 	    for n, layer_size in enumerate(layer_sizes):
 	        layer_top = v_spacing*(layer_size - 1)/2. + (top + bottom)/2.
@@ -410,6 +413,8 @@ class MultiLayer_NeuralNet(active):
 	            	fc = "green"
 	            if layer_num == None and n == len(layer_sizes)-1:
 	            	fc = "cyan"
+	            if (fun1 == 'a' or fun1 == 'h') and layer_num == -n:
+	            	fc = "y" 
 	            bbox_props = dict(boxstyle="circle,pad=0.3", fc=fc, ec="w", lw=2)
 	            t = ax1.text(n*h_spacing + left, layer_top - m*v_spacing, 
 	                        "{}".format(round(values[n][m], 2)), ha="center", va="center", rotation=0,
@@ -443,7 +448,7 @@ class MultiLayer_NeuralNet(active):
 	        	ax_f4.set_ylim(0, layer_size)
 
 	def draw_edges(self, ax, left, right, bottom, top, layer_sizes, preactivations, values, 
-					layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y=None):
+					layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y=None, fun1=None):
 		# Edges
 		for n, (layer_size_a, layer_size_b) in enumerate(zip(layer_sizes[:-1], layer_sizes[1:])):
 			layer_top_a = v_spacing*(layer_size_a - 1)/2. + (top + bottom)/2.
@@ -453,57 +458,93 @@ class MultiLayer_NeuralNet(active):
 					line_c = 'w'
 					color = 'w'
 					m_color = 'black'
+					# print(self.weights[n][m][o], self.dw[n][m][o])
+					w_val = round(self.weights[n][m][o], 2)
 					if layer_num == n+1:
 						if o == neuron_num:
 							color = 'g'
 							line_c = 'g'
 							m_color = 'g'
 
-						w_val = round(self.weights[n][m][o], 2)
 						ax_f1.text(m+0.5, layer_size_b -(o+0.5), str(w_val), va='center', ha='center', color=m_color)
 
-						line = plt.Line2D([n*h_spacing + left, (n + 1)*h_spacing + left],
-						              [layer_top_a - m*v_spacing, layer_top_b - o*v_spacing], c=line_c)
-						slope = ((layer_top_b - o*v_spacing) - (layer_top_a - m*v_spacing))/(h_spacing)
-						c_val = layer_top_a - m*v_spacing - slope*(n*h_spacing + left)
-
-						theta = math.atan(slope)
-						x_val = (v_spacing/2)*math.cos(theta)
-
-						# if counter%2 == 0:	                
-						text_1 = ax1.text((n*h_spacing + left + x_val), slope*(n*h_spacing + left + x_val) + c_val, "{}".format(round(self.weights[n][m][o], 2)), fontsize = 10, color = color)
-						# else:
-						# 	text_2 = ax1.text(((n + 1)*h_spacing + left - 3/2*x_val), slope*((n + 1)*h_spacing + left - 3/2*x_val) + c_val, "{}".format(round(grad[n][o][m], 2)), fontsize = 10, color = 'r')
-
-						ax1.add_artist(line)
-
 					elif (layer_num == -1*n):
-						line_c = 'b'
-						color = 'b'
-						m_color = 'b'
 						if fun1 == 'a':
 							# show del a_k
+							# else:
+							ax_a1.text(0+0.5, layer_size_b -(o+0.5), str(round(self.dh[-1*layer_num-1][0][o], 2)), va='center', ha='center', color=m_color)
+							ax_a2.text(0+0.5, (0+0.5), r'$\odot$', va='center', ha='center', color=m_color)
+							ax_a3.text(0+0.5, layer_size_b -(o+0.5), str(round(self.h[-layer_num][0][o], 2)) + '* (1 - ' + str(round(self.h[-layer_num][0][o], 2)) + ')', va='center', ha='center', color=m_color)
+							ax_a4.text(0+0.5, (0+0.5), '=', va='center', ha='center', color=m_color)
+							ax_a5.text(0+0.5, layer_size_b -(o+0.5), str(round(self.da[-layer_num][0][o], 2)), va='center', ha='center', color=m_color)
+
 
 						elif fun1 == 'h':
 							# show del h_k
+							ax_h1.text(layer_size_b -(o+0.5), m+0.5, str(w_val), va='center', ha='center', color=m_color)
+							ax_h2.text(0+0.5, (0+0.5), '*', va='center', ha='center', color=m_color)
+							ax_h3.text(0+0.5, layer_size_b -(o+0.5), str(round(self.da[-layer_num][0][o], 2)), va='center', ha='center', color=m_color)
+							ax_h4.text(0+0.5, (0+0.5), '=', va='center', ha='center', color=m_color)
+							ax_h5.text(0+0.5, layer_size_b -(o+0.5), str(round(self.dh[-1*layer_num-1][0][o], 2)), va='center', ha='center', color=m_color)
+							
 
 						elif fun1 == 'w':
 							# show del w_k
+							line_c = 'b'
+							color = 'b'
+							m_color = 'b'
+							ax_w1.text(0+0.5, layer_size_b -(o+0.5), str(round(self.da[-layer_num][0][o], 2)), va='center', ha='center', color=m_color)
+							ax_w2.text(0+0.5, (0+0.5), '*', va='center', ha='center', color=m_color)
+							ax_w3.text(layer_size_a-(m+0.5), 0+0.5, str(round(values[-layer_num][m], 2)), va='center', ha='center', color=m_color)
+							ax_w4.text(0+0.5, (0+0.5), '=', va='center', ha='center', color=m_color)
+							ax_w5.text(m+0.5, layer_size_b -(o+0.5), str(round(self.dw[n][o][m],2)), va='center', ha='center', color=m_color)
+ 
+					elif layer_num == -len(layer_sizes) + 1 and n == len(layer_sizes)-2:
+						# print(o, layer_size_b -(o+0.5))
+
+						ax_a1.text(0+0.5, layer_size_b -(o+0.5), str(round(self.h[-1][0][o], 2)), va='center', ha='center', color=m_color)
+						ax_a2.text(0+0.5, (0+0.5), '-', va='center', ha='center', color=m_color)
+						ax_a3.text(0+0.5, layer_size_b -(o+0.5), str(int(curr_y[0][o])), va='center', ha='center', color=m_color)
+						ax_a4.text(0+0.5, (0+0.5), '=', va='center', ha='center', color=m_color)
+						ax_a5.text(0+0.5, layer_size_b -(o+0.5), str(round(self.da[-1][0][o], 2)), va='center', ha='center', color=m_color)
 
 
-					elif layer_num == -(len(layer_sizes)-1):
-						# show del a_L 
+					line = plt.Line2D([n*h_spacing + left, (n + 1)*h_spacing + left],
+					              [layer_top_a - m*v_spacing, layer_top_b - o*v_spacing], c=line_c)
+					slope = ((layer_top_b - o*v_spacing) - (layer_top_a - m*v_spacing))/(h_spacing)
+					c_val = layer_top_a - m*v_spacing - slope*(n*h_spacing + left)
 
+					theta = math.atan(slope)
+					x_val = (v_spacing/2)*math.cos(theta)
+
+					# if counter%2 == 0:	                
+					text_1 = ax1.text((n*h_spacing + left + x_val), slope*(n*h_spacing + left + x_val) + c_val, "{}".format(round(self.weights[n][m][o], 2)), fontsize = 10, color = color)
+					# else:
+					# 	text_2 = ax1.text(((n + 1)*h_spacing + left - 3/2*x_val), slope*((n + 1)*h_spacing + left - 3/2*x_val) + c_val, "{}".format(round(grad[n][o][m], 2)), fontsize = 10, color = 'r')
+
+					ax1.add_artist(line)
 
 
 
 				if layer_num == n+1:
 					ax_f1.set_xlim(0, layer_size_a)
 					ax_f1.set_ylim(0, layer_size_b)
+				elif layer_num == -n or layer_num == -len(layer_sizes) + 1:
+					ax_a1.set_ylim(0, layer_size_b)
+					ax_a3.set_ylim(0, layer_size_b)
+					ax_a5.set_ylim(0, layer_size_b)
+					ax_h1.set_ylim(0, layer_size_a)
+					ax_h1.set_xlim(0, layer_size_b)
+					ax_h3.set_ylim(0, layer_size_b)
+					ax_h5.set_ylim(0, layer_size_b)
+					ax_w1.set_ylim(0, layer_size_b)
+					ax_w3.set_xlim(0, layer_size_a)
+					ax_w5.set_ylim(0, layer_size_b)
+					ax_w5.set_xlim(0, layer_size_a)
 
 
 	def draw_neural_net(self, ax, left, right, bottom, top, layer_sizes, 
-						preactivations, values, layer_num, neuron_num, fun1=None, curr_y=None):
+						preactivations, values, layer_num, neuron_num, curr_y=None, fun1=None):
 	    '''
 	    Draw a neural network cartoon using matplotilb.
 	    
@@ -529,21 +570,22 @@ class MultiLayer_NeuralNet(active):
 
 	    self.clear_all(layer_num, fun1)
 
-	    ax_x.text(0.5, 0.5, "*", va='center', ha='center')
-	    ax_equals.text(0.5, 0.5, "=", va='center', ha='center')
-	    if layer_num == len(layer_sizes)-1:
-	    	ax_sig.text(0.5, 0.5, 'softmax', va='center', ha='center', fontsize='smaller', rotation=90)
-	    elif layer_num > 0:
-	    	ax_sig.text(0.5, 0.5, r'$\sigma$', va='center', ha='center')
+	    if layer_num > 0:
+		    ax_x.text(0.5, 0.5, "*", va='center', ha='center')
+		    ax_equals.text(0.5, 0.5, "=", va='center', ha='center')
+		    if layer_num == len(layer_sizes)-1:
+		    	ax_sig.text(0.5, 0.5, 'softmax', va='center', ha='center', fontsize='smaller', rotation=90)
+		    else:
+		    	ax_sig.text(0.5, 0.5, r'$\sigma$', va='center', ha='center')
 	    n_layers = len(layer_sizes)
 	    v_spacing = (top - bottom)/float(max(layer_sizes))
 	    h_spacing = (right - left)/float(len(layer_sizes) - 1)
 
 	    self.draw_nodes(ax, left, right, bottom, top, layer_sizes, 
-	    				preactivations, values, layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y)
+	    				preactivations, values, layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y, fun1)
 	    
 	    self.draw_edges(ax, left, right, bottom, top, layer_sizes, 
-	    				preactivations, values, layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y)
+	    				preactivations, values, layer_num, neuron_num, v_spacing, h_spacing, n_layers, curr_y, fun1)
 		
 
 
@@ -617,24 +659,25 @@ class MultiLayer_NeuralNet(active):
 
 
 		# backward prop
-		self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, -(len(layer_val)-1), None, 'a')
+		self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, -(len(layer_val)-1), None, curr_y, 'a')
 		plt.pause(2)
 		fig.savefig('Plots/img_' + str(img_count))
 		img_count+=1
 		l_num = -(len(layer_val)-2)
-		for l in range(len(layer_val)-2):
-			self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, l_num, None, 'w')
+		for l in range(len(layer_val)-1):
+			self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, l_num, None, curr_y, 'w')
 			plt.pause(2)
 			fig.savefig('Plots/img_' + str(img_count))
 			img_count+=1
-			self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, l_num, None, 'h')
-			plt.pause(2)
-			fig.savefig('Plots/img_' + str(img_count))
-			img_count+=1
-			self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, l_num, None, 'a')
-			plt.pause(2)
-			fig.savefig('Plots/img_' + str(img_count))
-			img_count+=1
+			if l_num<0:
+				self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, l_num, None, curr_y, 'h')
+				plt.pause(2)
+				fig.savefig('Plots/img_' + str(img_count))
+				img_count+=1
+				self.draw_neural_net(fig.gca(), 0, 0.9, 0, 0.9, layer_val, preactivations, values, l_num, None, curr_y, 'a')
+				plt.pause(2)
+				fig.savefig('Plots/img_' + str(img_count))
+				img_count+=1
 			l_num+=1
 		
 
